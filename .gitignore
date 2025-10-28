@@ -1,0 +1,10 @@
+.venv
+docx
+out
+mp3
+*.log
+*.aux
+*.toc
+*.out
+*.gz
+.DS_Store
