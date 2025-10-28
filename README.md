@@ -169,7 +169,7 @@ All conversion happens **locally** on your machine. Manuscripts and audio files 
 ## ✍️ Author
 
 **Harri J. Salomaa** — reflections from 30 years in business, leadership & technology.  
-LinkedIn: https://www.linkedin.com/in/harrisalomaa
+LinkedIn: https://www.linkedin.com/in/hsalomaa
 
 ---
 
