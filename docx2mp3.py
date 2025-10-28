@@ -20,9 +20,9 @@
       FFmpeg must be installed and on your PATH (pydub uses it for MP3 I/O)
 
     💡 Examples
-      python abook_edge_chapters.py book.docx --outdir out --album "My Audiobook" --author "Your Name"
-      python abook_edge_chapters.py book.docx --voice fi-FI-SelmaNeural --rate -5 --volume +3
-      python abook_edge_chapters.py notes.txt --no-per-chapter  # only export a single combined file
+      doc2mp3.py book.docx --outdir out --album "My Audiobook" --author "Your Name"
+      doc2mp3.py book.docx --voice fi-FI-SelmaNeural --rate -5 --volume +3
+      doc2mp3.py notes.txt --no-per-chapter  # only export a single combined file
 
     Author: Harri J. Salomaa
     """
