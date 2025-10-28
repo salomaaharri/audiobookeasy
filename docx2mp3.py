@@ -1,4 +1,3 @@
-\
 #!/usr/bin/env python3
 """
     docx2mp3.py — Turn DOCX/TXT into an MP3 audiobook (per-chapter files + combined)
@@ -33,18 +32,67 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
+import shutil
+import sys
 
 from tqdm import tqdm
 from pydub import AudioSegment
+
+def existing_doc(path_str: str) -> Path:
+    p = Path(path_str).expanduser()
+    if not p.exists():
+        raise argparse.ArgumentTypeError(f"Source not found: {p}")
+    if not p.is_file():
+        raise argparse.ArgumentTypeError(f"Source is not a file: {p}")
+    if p.suffix.lower() not in {".docx", ".txt"}:
+        raise argparse.ArgumentTypeError("Source must be .docx or .txt")
+    return p.resolve()
+
+def writable_dir(path_str: str) -> Path:
+    d = Path(path_str).expanduser()
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        raise argparse.ArgumentTypeError(f"Cannot create output dir '{d}': {e}")
+    # quick writability test
+    try:
+        (d / ".write_test").touch(exist_ok=True)
+        (d / ".write_test").unlink(missing_ok=True)
+    except Exception as e:
+        raise argparse.ArgumentTypeError(f"Output dir not writable '{d}': {e}")
+    return d.resolve()
+
+def require_ffmpeg():
+    if shutil.which("ffmpeg") is None:
+        sys.exit("✖ FFmpeg not found on PATH. Install it and try again.")
 
 # ===============================
 # Small helpers
 # ===============================
 def slugify(name: str) -> str:
-    """Filesystem-safe chapter filename from a title."""
-    safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", name.strip())
-    safe = re.sub(r"_+", "_", safe).strip("._")
-    return safe or "chapter"
+    # Remove illegal filesystem chars (Windows/macOS/Linux safe)
+    name = re.sub(r'[<>:"/\\|?*\x00-\x1F]', "_", name)
+    # Collapse whitespace to underscores
+    name = re.sub(r"\s+", "_", name.strip())
+    # Trim leading/trailing dots/underscores
+    name = name.strip("._")
+    return name or "chapter"
+
+def derive_title_prefix(src: Path, chapters: List["Chapter"]) -> str:
+    # 1) DOCX document properties title
+    if src.suffix.lower() == ".docx":
+        try:
+            from docx import Document
+            t = (Document(str(src)).core_properties.title or "").strip()
+            if t:
+                return slugify(t)
+        except Exception:
+            pass
+    # 2) First heading if present (and not Untitled)
+    if chapters and chapters[0].title and chapters[0].title != "Untitled":
+        return slugify(chapters[0].title)
+    # 3) Fallback to input file name
+    return slugify(src.stem)
 
 def ensure_percent(val: str) -> str:
     """
@@ -231,15 +279,23 @@ async def build(
     combined_name: str = "book_combined.mp3",
     chapter_gap_ms: int = 1200,
     bitrate: str = "192k",
+    prefix: Optional[str] = None,         # <-- add this
 ) -> Path:
     """
     Full end-to-end pipeline:
-        1) Read chapters
-        2) Synthesize each chapter
-        3) Export per-chapter MP3s (optional)
-        4) Export combined MP3 with gaps between chapters
+      1) Read chapters
+      2) Synthesize each chapter
+      3) Export per-chapter MP3s (optional)
+      4) Export combined MP3 with gaps between chapters
     """
     chapters = read_chapters(src)
+    if chapters and chapters[0].title == "Untitled":
+        chapters[0].title = "Esipuhe"
+
+    # Compute filename prefix (explicit → auto-derived)
+    auto_prefix = derive_title_prefix(src, chapters)
+    effective_prefix = slugify(prefix) if prefix else auto_prefix
+
     outdir.mkdir(parents=True, exist_ok=True)
 
     combined = AudioSegment.empty()
@@ -248,22 +304,20 @@ async def build(
         for idx, ch in enumerate(tqdm(chapters, desc="Chapters", unit="chapter")):
             seg = await synth_chapter(ch, tdir, voice=voice, rate=rate, volume=volume)
 
-            # Export each chapter with ID3 tags
             if per_chapter:
-                fname = f"{idx+1:02d}_{slugify(ch.title)}.mp3"
+                fname = f"{effective_prefix}_{idx+1:02d}_{slugify(ch.title)}.mp3"
                 fpath = outdir / fname
                 seg.export(
                     fpath, format="mp3", bitrate=bitrate,
                     tags={"album": album, "artist": author, "title": ch.title}
                 )
 
-            # Append to combined with a chapter gap
             combined += seg
             if idx < len(chapters) - 1:
                 combined += AudioSegment.silent(duration=chapter_gap_ms)
 
-    # Export combined file
-    combined_path = outdir / combined_name
+    # Prefix the combined file too
+    combined_path = outdir / f"{effective_prefix}_{combined_name}"
     combined.export(
         combined_path, format="mp3", bitrate=bitrate,
         tags={"album": album, "artist": author, "title": src.stem}
@@ -279,7 +333,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="DOCX/TXT → per-chapter MP3 files + combined audiobook (Edge TTS)."
     )
-    parser.add_argument("source", type=Path, help="Input file (.docx or .txt)")
+    parser.add_argument("source", type=existing_doc, help="Input .docx or .txt")
     parser.add_argument("--outdir", type=Path, default=Path("output_mp3"), help="Output folder (default: output_mp3)")
     parser.add_argument("--album", type=str, default="Audiobook", help="Album tag for MP3 metadata")
     parser.add_argument("--author", type=str, default="Unknown Author", help="Artist/Author tag for MP3 metadata")
@@ -290,6 +344,8 @@ if __name__ == "__main__":
     parser.add_argument("--combined-name", default="book_combined.mp3", help="Filename for combined audiobook")
     parser.add_argument("--chapter-gap-ms", type=int, default=1200, help="Silence between chapters in combined file (ms)")
     parser.add_argument("--bitrate", default="192k", help="MP3 bitrate (128k–320k)")
+    parser.add_argument("--prefix", default=None, help="Filename prefix (defaults to DOCX title → first heading → input stem)")
+    
     args = parser.parse_args()
 
     # Normalize percent/dB inputs
@@ -310,5 +366,6 @@ if __name__ == "__main__":
             combined_name=args.combined_name,
             chapter_gap_ms=args.chapter_gap_ms,
             bitrate=args.bitrate,
+            prefix=args.prefix, 
         )
     )

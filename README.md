@@ -1,6 +1,6 @@
 # 🎧 AudioBookEasy 🎧 Turn Your Writing into Sound
 
-**AudioBookEasy** is a simple, privacy-first tool that converts your `.docx` or `.txt` manuscripts into professional-sounding **MP3 audiobooks** using **Microsoft Edge Neural Voices** 🎧 all **locally** on your own computer (no cloud upload).
+**audiobookeasy** is a simple, privacy-first tool that converts your `.docx` or `.txt` manuscripts into professional-sounding **MP3 audiobooks** using **Microsoft Edge Neural Voices** 🎧 all **locally** on your own computer (no cloud upload).
 
 This repo includes the script **`docx2mp3.py`** for per-chapter exports **and** a combined audiobook file.
 
@@ -14,13 +14,13 @@ This repo includes the script **`docx2mp3.py`** for per-chapter exports **and** 
 - ✅ Natural **neural voices** (Finnish & all Edge TTS voices)
 - ✅ Adjust **voice**, **rate**, **volume**, **chapter gaps**, **bitrate**
 - ✅ Adds **ID3 metadata** (album / author / title)
-- ✅ Works fully **offline/local** after install
+- ✅ Works almost fully **offline/local** after install
 
 ---
 
 ## 🧰 Requirements
 
-- **Python 3.9+**
+- **Python 3.9–3.12 recommended.** If you use **Python 3.13**, install the backport: `pip install audioop-lts`.
 - **FFmpeg** (for `pydub` MP3 I/O)
 - Python packages: `edge-tts`, `python-docx`, `pydub`, `tqdm`
 
@@ -31,7 +31,7 @@ This repo includes the script **`docx2mp3.py`** for per-chapter exports **and** 
 ### 1) Clone
 ```bash
 git clone https://github.com/salomaaharri/audiobookeasy.git
-cd AudioBookEasy
+cd audiobookeasy
 ```
 
 ### 2) Create & activate a virtual environment
@@ -45,7 +45,9 @@ source .venv/bin/activate
 
 ### 3) Install dependencies
 ```bash
+pip install --upgrade pip
 pip install edge-tts python-docx pydub tqdm
+pip install audioop-lts
 ```
 
 ### 4) Install FFmpeg
@@ -59,8 +61,9 @@ pip install edge-tts python-docx pydub tqdm
 
 ### DOCX → per-chapter MP3s + combined audiobook
 ```bash
-python docx2mp3.py my_book.docx \
-  --outdir out \
+python docx2mp3.py demoetxt.docx \ 
+  --outdir demo \
+  --prefix "demotxt" \
   --album "My Audiobook" \
   --author "Harri J. Salomaa" \
   --voice fi-FI-SelmaNeural \
@@ -175,6 +178,6 @@ LinkedIn: https://www.linkedin.com/in/hsalomaa
 
 ## 🌟 Support
 
-If this helped you, please ⭐ the repo and share your audiobook results on LinkedIn with **#AudioBookEasy**.
-# AudioBookEasy
+If this helped you, please ⭐ the repo and share your audiobook results on LinkedIn with **#audiobookeasy**.
+# audiobookeasy
 python code to generare simple audiobooks from docx
