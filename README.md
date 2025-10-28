@@ -1,6 +1,6 @@
-# 🎧 AudioBookEasy — Turn Your Writing into Sound
+# 🎧 AudioBookEasy 🎧 Turn Your Writing into Sound
 
-**AudioBookEasy** is a simple, privacy-first tool that converts your `.docx` or `.txt` manuscripts into professional-sounding **MP3 audiobooks** using **Microsoft Edge Neural Voices** — all **locally** on your own computer (no cloud upload).
+**AudioBookEasy** is a simple, privacy-first tool that converts your `.docx` or `.txt` manuscripts into professional-sounding **MP3 audiobooks** using **Microsoft Edge Neural Voices** 🎧 all **locally** on your own computer (no cloud upload).
 
 This repo includes the script **`docx2mp3.py`** for per-chapter exports **and** a combined audiobook file.
 
@@ -162,13 +162,13 @@ All conversion happens **locally** on your machine. Manuscripts and audio files 
 
 ## 🧑‍💻 License
 
-**MIT** — free to use, modify, and share.
+**MIT** : free to use, modify, and share.
 
 ---
 
 ## ✍️ Author
 
-**Harri J. Salomaa** — reflections from 30 years in business, leadership & technology.  
+**Harri J. Salomaa** : reflections from 30 years in business, leadership & technology.  
 LinkedIn: https://www.linkedin.com/in/hsalomaa
 
 ---
