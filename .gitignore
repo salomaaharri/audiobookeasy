@@ -3,9 +3,12 @@ docx
 out
 mp3
 demo
+output_mp3
 *.log
 *.aux
 *.toc
 *.out
 *.gz
+*.docx
+*.mp4
 .DS_Store

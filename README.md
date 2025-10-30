@@ -1,6 +1,6 @@
 # 🎧 AudioBookEasy 🎧 Turn Your Writing into Sound
 
-**audiobookeasy** is a simple, privacy-first tool that converts your `.docx` or `.txt` manuscripts into professional-sounding **MP3 audiobooks** using **Microsoft Edge Neural Voices** 🎧 all **locally** on your own computer (no cloud upload).
+**audiobookeasy** is a simple, privacy-first tool that converts ...ices** 🎧 all **locally** on your own computer (no cloud upload).
 
 This repo includes the script **`docx2mp3.py`** for per-chapter exports **and** a combined audiobook file.
 
@@ -14,9 +14,7 @@ This repo includes the script **`docx2mp3.py`** for per-chapter exports **and** 
 - ✅ Natural **neural voices** (Finnish & all Edge TTS voices)
 - ✅ Adjust **voice**, **rate**, **volume**, **chapter gaps**, **bitrate**
 - ✅ Adds **ID3 metadata** (album / author / title)
-- ✅ Works almost fully **offline/local** after install
-
----
+...
 
 ## 🧰 Requirements
 
@@ -30,30 +28,28 @@ This repo includes the script **`docx2mp3.py`** for per-chapter exports **and** 
 
 ### 1) Clone
 ```bash
-git clone https://github.com/salomaaharri/audiobookeasy.git
+git clone https://github.com/your/repo.git
 cd audiobookeasy
 ```
 
 ### 2) Create & activate a virtual environment
 ```bash
 python -m venv .venv
-# macOS/Linux
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
 source .venv/bin/activate
-# Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
 ```
 
 ### 3) Install dependencies
 ```bash
-pip install --upgrade pip
-pip install edge-tts python-docx pydub tqdm
-pip install audioop-lts
+pip install -r requirements.txt
 ```
 
 ### 4) Install FFmpeg
-- **macOS:** `brew install ffmpeg`  
-- **Ubuntu/Debian:** `sudo apt-get install ffmpeg`  
-- **Windows:** Download from https://ffmpeg.org/download.html and add `ffmpeg.exe` to PATH
+- macOS (Homebrew): `brew install ffmpeg`
+- Linux (Debian/Ubuntu): `sudo apt-get install ffmpeg`
+- Windows: Download from ffmpeg.org and add to PATH
 
 ---
 
@@ -61,7 +57,7 @@ pip install audioop-lts
 
 ### DOCX → per-chapter MP3s + combined audiobook
 ```bash
-python docx2mp3.py demoetxt.docx \ 
+python docx2mp3.py demotxt.docx \ 
   --outdir demo \
   --prefix "demotxt" \
   --album "My Audiobook" \
@@ -84,14 +80,16 @@ python docx2mp3.py my_book.docx --no-per-chapter
 > **Tip:** `--rate` accepts `-5` or `-5%`.  
 > **Important:** `edge-tts` expects **percent** for volume → use `+3` or `+3%` (not `+3dB`). This script accepts `+3dB` too; it converts to `+3%`.
 
+> Note: Audio is produced locally on your machine. Depending on the selected voice, the TTS engine may require an internet connection.
+
 ---
 
 ## 🧪 What You’ll Get
 
 ```
 out/
-├── 01_Chapter_1.mp3
-├── 02_Chapter_2.mp3
+├── demotxt_01_Chapter_1.mp3
+├── demotxt_02_Chapter_2.mp3
 └── book_combined.mp3
 ```
 
@@ -107,19 +105,17 @@ out/
 3. Uses **edge-tts** to synthesize each chunk with the chosen voice, rate, and volume.  
 4. **pydub** merges chunks (adding small pauses) and writes MP3s with metadata.
 
+> Small nicety: if the first detected chapter title is literally "Untitled", it is renamed to **"Esipuhe"** for nicer filenames and tags.
+
 ---
 
 ## 🎙️ Voice Examples
 
-| Language | Voice | Description |
-|---|---|---|
-| Finnish | `fi-FI-SelmaNeural` | warm, expressive female |
-| Finnish | `fi-FI-NooraNeural` | neutral, professional |
-| Finnish | `fi-FI-HarriNeural` | calm, male |
-| English (US) | `en-US-JennyNeural` | clear, friendly |
-| English (GB) | `en-GB-RyanNeural` | British male |
-
-Change with `--voice VOICENAME`.
+```bash
+python docx2mp3.py mybook.docx --voice fi-FI-SelmaNeural
+python docx2mp3.py mybook.docx --voice fi-FI-NooraNeural
+python docx2mp3.py mybook.docx --voice en-GB-LibbyNeural
+```
 
 ---
 
@@ -129,6 +125,7 @@ Change with `--voice VOICENAME`.
 |---|---|---|
 | `source` | Input file (.docx or .txt) | — |
 | `--outdir` | Output folder | `output_mp3` |
+| `--prefix` | Filename prefix for per-chapter tracks (auto: DOCX title → first heading → input filename) | *(auto)* |
 | `--album` | MP3 album tag | `Audiobook` |
 | `--author` | MP3 artist/author tag | `Unknown Author` |
 | `--voice` | Edge TTS voice | `fi-FI-SelmaNeural` |
@@ -147,7 +144,7 @@ Change with `--voice VOICENAME`.
   Add `=` or quote the value: `--rate="-5%"` or just `--rate -5` (script adds the `%`).
 
 - **`Invalid volume '+3dB'`**  
-  Use percent: `--volume +3` or `--volume +3%`. This script accepts `+3dB` and converts to `+3%`, but older `edge-tts` may complain if passed through unnormalized.
+  Use percent: `--volume +3` or `--volume +3%`. This script acce...ut older `edge-tts` may complain if passed through unnormalized.
 
 - **`FFmpeg not found` / export fails**  
   Install FFmpeg and ensure it’s on PATH (see install step 4).
@@ -159,13 +156,13 @@ Change with `--voice VOICENAME`.
 
 ## 🔐 Privacy
 
-All conversion happens **locally** on your machine. Manuscripts and audio files are never uploaded.
+Audio processing (splitting/merging, MP3 export) happens **locally** on your machine. Text-to-speech synthesis uses **Edge TTS** and may require an internet connection depending on the voice/engine.
 
 ---
 
 ## 🧑‍💻 License
 
-**MIT** : free to use, modify, and share.
+MIT — do whatever, attribution appreciated.
 
 ---
 
@@ -180,4 +177,4 @@ LinkedIn: https://www.linkedin.com/in/hsalomaa
 
 If this helped you, please ⭐ the repo and share your audiobook results on LinkedIn with **#audiobookeasy**.
 # audiobookeasy
-python code to generare simple audiobooks from docx
+python code to generate simple audiobooks from docx
