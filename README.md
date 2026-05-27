@@ -57,8 +57,8 @@ pip install -r requirements.txt
 
 ### DOCX → per-chapter MP3s + combined audiobook
 ```bash
-python docx2mp3.py demotxt.docx \ 
-  --outdir demo \
+python docx2mp3.py demo/demoetxt.docx \ 
+  --outdir demo/out \
   --prefix "demotxt" \
   --album "My Audiobook" \
   --author "Harri J. Salomaa" \
@@ -81,6 +81,86 @@ python docx2mp3.py my_book.docx --no-per-chapter
 > **Important:** `edge-tts` expects **percent** for volume → use `+3` or `+3%` (not `+3dB`). This script accepts `+3dB` too; it converts to `+3%`.
 
 > Note: Audio is produced locally on your machine. Depending on the selected voice, the TTS engine may require an internet connection.
+
+---
+
+## 🌍 Translating chapters first (optional)
+
+If you have an English manuscript and want a Finnish audiobook, [translate.py](translate.py) translates a DOCX chapter to Finnish via **Claude Sonnet 4.6** while preserving paragraph structure (so the resulting DOCX feeds straight back into `docx2mp3.py`).
+
+```bash
+pip install 'anthropic>=0.92.0'
+# Add ANTHROPIC_API_KEY=sk-ant-... to .env.local (auto-loaded)
+
+python translate.py Englanti/Chapter_1.docx --out Suomi/Chapter_1.docx
+```
+
+- Keeps English proper names; localizes only labels like *Chapter → Luku*.
+- Preserves `Heading 1` / `Heading 2` styles → chapter detection still works in `docx2mp3.py`.
+- Cost: ~$0.10–0.15 per ~17k-char chapter (Sonnet 4.6 input + adaptive thinking).
+
+---
+
+## 🔌 Engines
+
+`audiobookeasy` supports three TTS engines. Pick one with `--engine`.
+
+### 🆓 Edge TTS (default, free)
+
+No setup beyond the base install. Decent neural voices, limited emotional control. Finnish: `fi-FI-SelmaNeural`, `fi-FI-NooraNeural`.
+
+```bash
+python docx2mp3.py book.docx --engine edge --voice fi-FI-SelmaNeural
+```
+
+### 🎭 OpenAI `gpt-4o-mini-tts` (paid, most steerable)
+
+Accepts a **natural-language instruction** per request — the biggest expressiveness win for audiobook narration.
+
+```bash
+pip install 'openai>=1.40.0'
+export OPENAI_API_KEY=sk-...        # or put it in .env.local (see below)
+
+python docx2mp3.py book.docx \
+  --engine openai \
+  --voice alloy \
+  --instructions "Warm, contemplative narration. Slow on emotional passages. Treat dialogue with quiet intimacy."
+```
+
+> **Tip:** instead of `export`, drop your keys into a `.env.local` file next to the script:
+> ```
+> OPENAI_API_KEY=sk-...
+> ELEVENLABS_API_KEY=...
+> ```
+> The script auto-loads `.env.local` (or `.env`) on startup. `.env*` is gitignored.
+
+Voices: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse`. `--rate -5%` maps to OpenAI `speed=0.95`. Supports Finnish and many other languages.
+
+### 🎙️ ElevenLabs (paid, best raw voice quality)
+
+Best for long-form expressive narration and voice cloning. Voice IDs are account-specific — grab them from your ElevenLabs dashboard.
+
+```bash
+pip install 'elevenlabs>=1.0.0'
+export ELEVENLABS_API_KEY=...
+
+python docx2mp3.py book.docx \
+  --engine elevenlabs \
+  --voice <your_voice_id> \
+  --stability 0.5 --similarity 0.75 --style 0.2
+```
+
+Default model: `eleven_multilingual_v2` (Finnish + 29 languages). Override with `--model`.
+
+### Cost & privacy
+
+| Engine | Cost (approx) | Text leaves machine? |
+|---|---|---|
+| edge | free | yes (sent to MS Edge TTS) |
+| openai | ~$0.015 per 1k chars (gpt-4o-mini-tts) | yes (sent to OpenAI) |
+| elevenlabs | ~$0.15–0.30 per 1k chars (plan-dependent) | yes (sent to ElevenLabs) |
+
+A 200-page book is roughly 250k–400k characters. Rough totals: OpenAI ~$4–6, ElevenLabs ~$40–120. Audio mixing/export is always local.
 
 ---
 
@@ -128,9 +208,15 @@ python docx2mp3.py mybook.docx --voice en-GB-LibbyNeural
 | `--prefix` | Filename prefix for per-chapter tracks (auto: DOCX title → first heading → input filename) | *(auto)* |
 | `--album` | MP3 album tag | `Audiobook` |
 | `--author` | MP3 artist/author tag | `Unknown Author` |
-| `--voice` | Edge TTS voice | `fi-FI-SelmaNeural` |
-| `--rate` | Speech rate (`-5`, `-5%`, `+10`, …) | `-5%` |
-| `--volume` | Volume (`+3`, `+3%`, `+3dB`) | `+0%` |
+| `--engine` | TTS backend: `edge`, `openai`, `elevenlabs` | `edge` |
+| `--voice` | Voice (engine-specific) | edge: `fi-FI-SelmaNeural`; openai: `alloy`; elevenlabs: *(required)* |
+| `--model` | Engine model override | openai: `gpt-4o-mini-tts`; elevenlabs: `eleven_multilingual_v2` |
+| `--rate` | Speech rate (edge: `-5`/`-5%`; openai: mapped to `speed`) | `-5%` |
+| `--volume` | Volume (edge only) | `+0%` |
+| `--instructions` | OpenAI `gpt-4o-mini-tts` style prompt | *(none)* |
+| `--stability` | ElevenLabs stability (0.0–1.0) | `0.5` |
+| `--similarity` | ElevenLabs similarity_boost (0.0–1.0) | `0.75` |
+| `--style` | ElevenLabs style (0.0–1.0) | `0.0` |
 | `--no-per-chapter` | Only export combined file | `False` |
 | `--combined-name` | Filename of combined MP3 | `book_combined.mp3` |
 | `--chapter-gap-ms` | Silence between chapters in combined file | `1200` |
@@ -176,5 +262,3 @@ LinkedIn: https://www.linkedin.com/in/hsalomaa
 ## 🌟 Support
 
 If this helped you, please ⭐ the repo and share your audiobook results on LinkedIn with **#audiobookeasy**.
-# audiobookeasy
-python code to generate simple audiobooks from docx

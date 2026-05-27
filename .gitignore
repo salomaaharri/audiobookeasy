@@ -1,14 +1,18 @@
 .venv
-docx
-out
-mp3
-demo
-output_mp3
+.env
+.env.*
+.DS_Store
+~$*.docx
+
+# Media outputs (large, regenerable)
+*.docx
+*.mp3
+*.mp4
+*.epub
+
+# Generated/log artifacts
 *.log
 *.aux
 *.toc
 *.out
 *.gz
-*.docx
-*.mp4
-.DS_Store

@@ -1,0 +1,14 @@
+edge-tts>=7.0.0
+python-docx>=1.1.2
+pydub>=0.25.1
+tqdm>=4.66.0
+
+# Optional engines — install only what you use:
+# openai>=1.40.0       # for --engine openai     (set OPENAI_API_KEY)
+# elevenlabs>=1.0.0    # for --engine elevenlabs (set ELEVENLABS_API_KEY)
+
+# Optional: translate.py (English → Finnish via Claude Sonnet 4.6)
+# anthropic>=0.92.0    # set ANTHROPIC_API_KEY
+
+# Optional: make_ebook.py (build EPUB from DOCX chapters)
+# ebooklib>=0.18

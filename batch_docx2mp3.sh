@@ -8,6 +8,15 @@
 #   ALBUM="My Audiobook" AUTHOR="Your Name" VOICE="fi-FI-SelmaNeural" RATE="-5" VOLUME="+3" \
 #   ONLY_COMBINED=1 PREFIX="title" bash batch_docx2mp3.sh docx out
 #
+# Engine selection (env vars):
+#   ENGINE=edge|openai|elevenlabs   (default: edge)
+#   MODEL=<engine model override>
+#   INSTRUCTIONS="Warm, contemplative narration..."   (OpenAI gpt-4o-mini-tts only)
+#   STABILITY / SIMILARITY / STYLE                    (ElevenLabs only, 0.0–1.0)
+# Auth (set as env before running):
+#   OPENAI_API_KEY=sk-...           (for ENGINE=openai)
+#   ELEVENLABS_API_KEY=...          (for ENGINE=elevenlabs)
+#
 # Notes:
 # - If PREFIX is set, files will be named: PREFIX_<nn>_<Chapter>.mp3 and PREFIX_<combined>.mp3
 # - If PREFIX is NOT set, Python will auto-derive it from DOCX Title → first Heading → filename.
@@ -21,10 +30,16 @@ OUTDIR="${2:-out}"
 # Defaults (can be overridden via env)
 ALBUM="${ALBUM:-My Audiobook}"
 AUTHOR="${AUTHOR:-Harri J. Salomaa}"
-VOICE="${VOICE:-fi-FI-SelmaNeural}"
+ENGINE="${ENGINE:-edge}"     # edge | openai | elevenlabs
+VOICE="${VOICE:-}"           # engine-specific; empty → Python picks engine default
+MODEL="${MODEL:-}"           # engine model override (optional)
 RATE="${RATE:--5}"           # script adds % automatically
 VOLUME="${VOLUME:+$VOLUME}"  # allow empty env var
 : "${VOLUME:=+3}"            # default +3%
+INSTRUCTIONS="${INSTRUCTIONS:-}"  # OpenAI gpt-4o-mini-tts style prompt
+STABILITY="${STABILITY:-}"        # ElevenLabs
+SIMILARITY="${SIMILARITY:-}"      # ElevenLabs
+STYLE="${STYLE:-}"                # ElevenLabs
 ONLY_COMBINED="${ONLY_COMBINED:-0}"  # set 1 to skip per-chapter files
 PREFIX="${PREFIX:-}"         # optional filename prefix; if empty, Python auto-derives
 SCRIPT="${SCRIPT:-docx2mp3.py}"
@@ -39,7 +54,7 @@ fi
 
 echo "Input:  $INDIR"
 echo "Output: $OUTDIR"
-echo "Voice:  $VOICE | Rate: $RATE | Volume: $VOLUME"
+echo "Engine: $ENGINE | Voice: ${VOICE:-<engine default>} | Rate: $RATE | Volume: $VOLUME"
 echo "Album:  $ALBUM | Author: $AUTHOR"
 [[ -n "$PREFIX" ]] && echo "Prefix: $PREFIX (explicit)" || echo "Prefix: auto (DOCX title/heading/filename)"
 [[ "$ONLY_COMBINED" == "1" ]] && echo "Mode:   only combined MP3 (no per-chapter files)"
@@ -86,11 +101,17 @@ while IFS= read -r -d '' DOCX; do
     --outdir "$OUTDIR"
     --album "$ALBUM"
     --author "$AUTHOR"
-    --voice "$VOICE"
+    --engine "$ENGINE"
     --rate "$RATE"
     --volume "$VOLUME"
     --combined-name "$combined_base"
   )
+  [[ -n "$VOICE" ]]        && args+=( --voice "$VOICE" )
+  [[ -n "$MODEL" ]]        && args+=( --model "$MODEL" )
+  [[ -n "$INSTRUCTIONS" ]] && args+=( --instructions "$INSTRUCTIONS" )
+  [[ -n "$STABILITY" ]]    && args+=( --stability "$STABILITY" )
+  [[ -n "$SIMILARITY" ]]   && args+=( --similarity "$SIMILARITY" )
+  [[ -n "$STYLE" ]]        && args+=( --style "$STYLE" )
   if [[ "$ONLY_COMBINED" == "1" ]]; then
     args+=( --no-per-chapter )
   fi
